@@ -30,8 +30,18 @@ export default function App() {
 
       const res = await fetch(`${API_BASE}?${params}`);
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Fetch error');
+        let errorMessage = `HTTP Error ${res.status}`;
+        try {
+          // Attempt to parse JSON error from backend
+          const err = await res.clone().json();
+          errorMessage = err.message || errorMessage;
+        } catch (e) {
+          // If it's HTML (like a 404 page), don't crash
+          const text = await res.text();
+          console.error("Received HTML instead of JSON:", text);
+          errorMessage = `Server returned an invalid response (Status ${res.status}). Ensure API_BASE is correct.`;
+        }
+        throw new Error(errorMessage);
       }
       const data = await res.json();
       setProducts(prev => fresh ? data.data : [...prev, ...data.data]);
