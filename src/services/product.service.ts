@@ -4,18 +4,10 @@ import { encodeCursor, CursorData } from '../utils/cursor';
 interface GetProductsResult {
   data: IProduct[];
   nextCursor: string | null;
-  snapshotTime: string;  // ISO string
+  snapshotTime: string;
   hasMore: boolean;
 }
 
-/**
- * Fetch a page of products using cursor‑based snapshot pagination.
- *
- * @param limit          Number of items to return (1–100)
- * @param category       Optional category filter
- * @param decodedCursor  Parsed cursor from previous page, or undefined for first page
- * @param snapshotTime   Time anchor for the session; generated if missing
- */
 export async function getProducts(
   limit: number,
   category?: string,
@@ -23,10 +15,8 @@ export async function getProducts(
   snapshotTime?: Date
 ): Promise<GetProductsResult> {
 
-  // If no snapshotTime is provided, start a new session anchored to "now"
   const effectiveSnapshot = snapshotTime || new Date();
 
-  // Base filter: all products that existed at snapshot time
   const filter: any = {
     updatedAt: { $lte: effectiveSnapshot }
   };
@@ -35,7 +25,6 @@ export async function getProducts(
     filter.category = category;
   }
 
-  // Cursor conditions for keyset pagination
   if (decodedCursor) {
     const cursorUpdatedAt = new Date(decodedCursor.updatedAt);
     filter.$and = [
@@ -51,10 +40,8 @@ export async function getProducts(
     ];
   }
 
-  // Always sort newest first, tie‑break by _id
   const sort: any = { updatedAt: -1, _id: -1 };
 
-  // Fetch one extra to detect hasMore
   const docs = await Product.find(filter)
     .sort(sort)
     .limit(limit + 1)

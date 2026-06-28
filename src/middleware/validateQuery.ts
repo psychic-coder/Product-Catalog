@@ -9,7 +9,7 @@ const ALLOWED_CATEGORIES = [
 export function validateGetProducts(req: Request, res: Response, next: NextFunction) {
   const { limit, cursor, snapshotTime, category } = req.query;
 
-  // --- limit validation ---
+
   if (limit) {
     const parsed = parseInt(limit as string, 10);
     if (isNaN(parsed) || parsed < 1 || parsed > 100) {
@@ -18,16 +18,16 @@ export function validateGetProducts(req: Request, res: Response, next: NextFunct
     req.query.limit = parsed.toString();
   }
 
-  // --- cursor validation ---
+
   if (cursor) {
     const decoded = decodeCursor(cursor as string);
     if (!decoded) {
       return res.status(400).json({ message: 'Invalid cursor' });
     }
-    (req as any).decodedCursor = decoded;  // attach for service layer
+    (req as any).decodedCursor = decoded;
   }
 
-  // --- snapshotTime validation ---
+
   if (snapshotTime) {
     const date = new Date(snapshotTime as string);
     if (isNaN(date.getTime())) {
@@ -36,7 +36,7 @@ export function validateGetProducts(req: Request, res: Response, next: NextFunct
     (req as any).snapshotTime = date;
   }
 
-  // --- category validation ---
+
   if (category) {
     if (typeof category !== 'string' || !ALLOWED_CATEGORIES.includes(category)) {
       return res.status(400).json({ message: 'Invalid category' });
